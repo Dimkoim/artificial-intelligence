@@ -9,14 +9,15 @@ unitlist = row_units + column_units + square_units
 #First we will reshape the boxes list in 9x9 matrix
 reshaped_boxes = np.reshape(boxes, (9,9))
 #Then we will pick the diagonal units
-diag_units = [ row[i] for i,row in enumerate(reshaped_boxes)]
+diagonal_units = [[rows[i]+cols[i] for i in range(len(rows))]] + [[rows[i]+cols[len(rows) - 1 - i] for i in range(len(rows))]]
+
 # Update the unit list to add the new diagonal units
-unitlist = unitlist + diag_units
+unitlist = unitlist + diagonal_units
 
 # Must be called after all units (including diagonals) are added to the unitlist
 units = extract_units(unitlist, boxes)
 peers = extract_peers(units, boxes)
-#
+
 #Helper functions
 def intersection(lst1, lst2):
     """Finds the intersection of two lists
@@ -34,7 +35,6 @@ def intersection(lst1, lst2):
         A list with the common elements
     """
     return list(set(lst1) & set(lst2))
-
 
 def naked_twins(values):
     """Eliminate values using the naked twins strategy.
@@ -233,7 +233,6 @@ def solve(grid):
     values = grid2values(grid)
     values = search(values)
     return values
-
 
 if __name__ == "__main__":
     diag_sudoku_grid = '2.............62....1....7...6..8...3...9...7...6..4...4....8....52.............3'
