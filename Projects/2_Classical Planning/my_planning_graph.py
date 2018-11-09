@@ -15,7 +15,7 @@ class ActionLayer(BaseActionLayer):
         """
         for eff_a in actionA.effects:
             for eff_b in actionB.effects:
-                if (eff_a == ~ eff_b):# or (b_eff == ~ a_eff):
+                if (eff_a == ~ eff_b):
                     return True
         return False
 
@@ -28,12 +28,12 @@ class ActionLayer(BaseActionLayer):
         layers.ActionNode
         """
         for eff_a in actionA.effects:
-            if ~ eff_a in actionB.preconditions:
-                return True
-        for eff_b in actionB.effects:
-            if ~ eff_b in actionA.preconditions:
-                return True
+            for eff_b in actionB.preconditions:
+                if ~eff_a in actionB.preconditions or ~eff_b in actionA.preconditions:
+                    return True
         return False
+
+
     def _competing_needs(self, actionA, actionB):
         """ Return True if any preconditions of the two actions are pairwise mutex in the parent layer
 
@@ -122,10 +122,9 @@ class PlanningGraph:
         level = -1
         levels_sum = 0
         goals = []
-        while len(goals) <= len(self.goal):
+        while len(goals) < len(self.goal):
             if self._is_leveled:
                 break
-
             level += 1
             for goal in self.goal:
                 if goal not in goals and goal in self.literal_layers[level]:
@@ -156,10 +155,9 @@ class PlanningGraph:
         """
         max_level = -1
         goals = []
-        while len(goals) != len(self.goal):
+        while len(goals) < len(self.goal):
             if self._is_leveled:
                 break
-
             max_level += 1
             for goal in self.goal:
                 if goal not in goals and goal in self.literal_layers[max_level]:
@@ -190,18 +188,12 @@ class PlanningGraph:
             set_level += 1
             for goal in self.goal:
                 if goal not in self.literal_layers[set_level]:
-                    goal_missing = True
+                    for goals in combinations(self.goal, 2):
+                        goal_1 = goals[0]
+                        goal_2 = goals[1]
+                        if self.literal_layers[set_level].is_mutex(goal_1, goal_2):
+                            break
                     break
-            else:
-                goal_missing = False
-            if goal_missing:
-                continue
-
-            for goals in combinations(self.goal, 2):
-                if self.literal_layers[set_level].is_mutex(*goals):
-                    break  # out of for loop
-            else:
-                break  # out of while loop
         return set_level
 
     ##############################################################################
